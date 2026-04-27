@@ -1,6 +1,0 @@
-node_modules/
-.env
-public/uploads/*
-*.log
-.vscode/
-.DS_Store
