@@ -1,0 +1,51 @@
+<% if (locals.user) { %>
+<!-- Menu Toggle Button -->
+<button class="menu-toggle" id="menuToggle">
+    <i class="fas fa-bars"></i>
+</button>
+
+<!-- Sidebar Overlay -->
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+<!-- Sidebar Menu -->
+<div class="sidebar-menu" id="sidebarMenu">
+    <div class="sidebar-header">
+        <img src="<%= user.avatar || '/uploads/default-avatar.png' %>" alt="Avatar" id="sidebarAvatar">
+        <div>
+            <h4 id="sidebarDisplayName">
+                <%= user.displayName || user.username %>
+            </h4>
+            <p id="sidebarUserInfo">@<%= user.username %> • <%= user.role === 'admin' ? 'Quản trị viên' : 'Thành viên' %></p>
+        </div>
+    </div>
+
+    <div class="sidebar-nav">
+        <a href="/posts"><i class="fas fa-home"></i> <span>Trang chủ</span></a>
+        <a href="/posts/create"><i class="fas fa-plus-circle"></i> <span>Viết bài</span></a>
+        <a href="/users/me"><i class="fas fa-user-circle"></i> <span>Hồ sơ của tôi</span></a>
+        <a href="/users/notifications"><i class="fas fa-bell"></i> <span>Thông báo</span>
+            <span class="badge bg-danger" id="sidebarBadge" style="display: none; margin-left: auto;">0</span>
+        </a>
+        <a href="/settings"><i class="fas fa-cog"></i> <span>Cài đặt</span></a>
+        <% if (user.role === 'admin') { %>
+            <a href="/admin" id="adminLink"><i class="fas fa-shield-alt"></i> <span>Quản trị</span></a>
+        <% } %>
+
+        <div class="theme-switch-item">
+            <i class="fas fa-moon" id="themeIcon"></i>
+            <span id="themeText">Chế độ tối</span>
+            <div style="margin-left: auto;">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="themeSwitch" style="cursor: pointer;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="sidebar-footer">
+        <a href="/auth/logout" id="logoutBtn">
+            <i class="fas fa-sign-out-alt"></i> Đăng xuất
+        </a>
+    </div>
+</div>
+<% } %>

@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <% const title = post.title + ' - BlogCloud'; %>
+  <%- include('partials/head', { title: title }) %>
+</head>
+<body>
+  <%- include('partials/header') %>
+  <script src="/js/sidebar.js"></script>
+  <main class="container my-4" style="margin-top: 80px !important;">
+  <div class="row justify-content-end">
+    <div class="col-12 col-md-10 col-lg-9 col-xl-10">
+      <div class="card shadow-sm border-0 rounded-4 mb-4">
+        <div class="card-body p-4">
+          <h1 class="card-title fw-bold mb-3"><%= post.title %></h1>
+          <div class="d-flex align-items-center gap-3 mb-4 text-muted small">
+            <a href="/users/profile/<%= post.author._id %>" class="text-decoration-none d-flex align-items-center gap-2">
+              <img src="<%= post.author.avatar || '/uploads/default-avatar.png' %>" 
+                   alt="Avatar" 
+                   style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
+              <span><%= post.author.displayName || post.author.username %></span>
+            </a>
+            <span><i class="far fa-calendar-alt"></i> Đăng: <%= new Date(post.createdAt).toLocaleString('vi-VN') %></span>
+            <% if (post.updatedAt && post.updatedAt.toString() !== post.createdAt.toString()) { %>
+              <span><i class="fas fa-edit"></i> Cập nhật: <%= new Date(post.updatedAt).toLocaleString('vi-VN') %></span>
+            <% } %>
+          </div>
+          <div class="post-content mb-4"><%- post.content %></div>
+          <div class="d-flex flex-wrap gap-2 mb-3 border-top pt-3">
+          <button class="btn btn-outline-danger like-btn" data-id="<%= post._id %>">
+            <i class="<%= post.likes && post.likes.includes(user.userId) ? 'fas' : 'far' %> fa-heart"></i>
+            <span class="like-count"><%= post.likes ? post.likes.length : 0 %></span>
+          </button>
+          <button class="btn btn-outline-secondary dislike-btn" data-id="<%= post._id %>">
+            <i class="<%= post.dislikes && post.dislikes.includes(user.userId) ? 'fas' : 'far' %> fa-thumbs-down"></i>
+            <span class="dislike-count"><%= post.dislikes ? post.dislikes.length : 0 %></span>
+          </button>
+          <button class="btn btn-outline-success save-btn" data-id="<%= post._id %>">
+            <i class="<%= user.savedPosts && user.savedPosts.some(p => p._id && p._id.toString() === post._id.toString()) ? 'fas' : 'far' %> fa-bookmark"></i>
+            Lưu
+          </button>
+          <button class="btn btn-outline-primary share-btn" data-id="<%= post._id %>">
+            <i class="fas fa-share-alt"></i> Chia sẻ
+          </button>
+          <button class="btn btn-outline-warning report-btn" data-id="<%= post._id %>" data-bs-toggle="modal" data-bs-target="#reportModal">
+            <i class="fas fa-flag"></i> Báo cáo
+          </button>
+          <% if (user && user.userId && post && post.author && (user.userId.toString() === post.author._id.toString() || user.role === 'admin')) { %>
+            <a href="/posts/<%= post._id %>/edit" class="btn btn-outline-secondary"><i class="fas fa-edit"></i> Sửa bài</a>
+            <form action="/posts/<%= post._id %>/delete" method="POST" class="d-inline" onsubmit="return confirm('Xóa bài viết vĩnh viễn?')">
+              <button type="submit" class="btn btn-danger"><i class="fas fa-trash-alt"></i> Xóa bài</button>
+            </form>
+          <% } %>
+        </div>
+      </div>
+    </div>
+    <div class="card shadow-sm border-0 rounded-4">
+      <div class="card-header bg-white fw-bold fs-5">
+        <i class="fas fa-comments me-2"></i>Bình luận (<span id="comment-count"><%= comments ? comments.length : 0 %></span>)
+      </div>
+      <div class="card-body">
+        <form id="commentForm" data-postid="<%= post._id %>" class="mb-4">
+          <div class="mb-2">
+            <textarea class="form-control" id="commentContent" rows="3" placeholder="Viết bình luận..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary btn-sm"><i class="fas fa-paper-plane"></i> Gửi bình luận</button>
+        </form>
+        <div id="commentsList">
+          <% if (comments && comments.length > 0) { %>
+            <% comments.forEach(comment => { %>
+              <div class="comment-item border-bottom pb-2 mb-2" data-id="<%= comment._id %>">
+                <div class="d-flex justify-content-between align-items-start">
+                  <div>
+                    <strong><i class="fas fa-user-circle"></i> <%= comment.author ? comment.author.username : 'Unknown' %></strong>
+                    <small class="text-muted ms-2"><%= new Date(comment.createdAt).toLocaleString('vi-VN') %></small>
+                    <p class="mt-1 mb-0"><%= comment.content %></p>
+                  </div>
+                  <% if (user.userId.toString() === comment.author._id.toString()) { %>
+                    <button class="btn btn-sm btn-outline-danger delete-comment" data-id="<%= comment._id %>">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  <% } %>
+                </div>
+              </div>
+            <% }) %>
+          <% } else { %>
+            <p class="text-muted" id="emptyCommentsMsg">
+              <i class="fas fa-comment-slash me-2"></i>Chưa có bình luận nào. Hãy là người đầu tiên!
+            </p>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  </main>
+  <div class="modal fade" id="reportModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Báo cáo bài viết</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <textarea id="reportReason" class="form-control" rows="3" placeholder="Lý do báo cáo..."></textarea>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+          <button type="button" class="btn btn-danger" id="submitReport">Gửi báo cáo</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <%- include('partials/footer') %>
+
+  <script src="/js/common.js"></script>
+  <script>
+    const commentForm = document.getElementById('commentForm');
+    const commentContent = document.getElementById('commentContent');
+    const commentsList = document.getElementById('commentsList');
+    const commentCountSpan = document.getElementById('comment-count');
+
+    commentForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const postId = commentForm.dataset.postid;
+      const content = commentContent.value.trim();
+      if (!content) {
+        showToast('Vui lòng nhập nội dung bình luận', 'warning');
+        return;
+      }
+
+      try {
+        const res = await fetch(`/comments/${postId}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ content })
+        });
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          const comment = data.comment;
+          const commentHtml = `
+            <div class="comment-item border-bottom pb-2 mb-2" data-id="${comment._id}">
+              <div class="d-flex justify-content-between align-items-start">
+                <div>
+                  <strong><i class="fas fa-user-circle"></i> ${escapeHtml(comment.author.displayName || comment.author.username)}</strong>
+                  <small class="text-muted ms-2">${new Date().toLocaleString('vi-VN')}</small>
+                  <p class="mt-1 mb-0">${escapeHtml(comment.content)}</p>
+                </div>
+                <button class="btn btn-sm btn-outline-danger delete-comment" data-id="${comment._id}">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </div>
+          `;
+          commentsList.insertAdjacentHTML('afterbegin', commentHtml);
+          const emptyMsg = document.getElementById('emptyCommentsMsg');
+          if (emptyMsg) emptyMsg.remove();
+          commentCountSpan.innerText = parseInt(commentCountSpan.innerText) + 1;
+          commentContent.value = '';
+          showToast('Đã thêm bình luận!', 'success');
+          attachDeleteEvents();
+        } else {
+          showToast(data.error || 'Lỗi khi gửi bình luận', 'danger');
+        }
+      } catch (err) {
+        showToast('Lỗi kết nối', 'danger');
+      }
+    });
+
+    async function deleteComment(commentId, btnElement) {
+      try {
+        const res = await fetch(`/comments/${commentId}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          btnElement.closest('.comment-item').remove();
+          commentCountSpan.innerText = parseInt(commentCountSpan.innerText) - 1;
+          if (commentsList.children.length === 0) {
+            commentsList.innerHTML = '<p class="text-muted" id="emptyCommentsMsg"><i class="fas fa-comment-slash me-2"></i>Chưa có bình luận nào. Hãy là người đầu tiên!</p>';
+          }
+          showToast('Đã xóa bình luận', 'success');
+        } else {
+          showToast(data.error || 'Không thể xóa', 'danger');
+        }
+      } catch (err) {
+        showToast('Lỗi kết nối', 'danger');
+      }
+    }
+
+    function handleDelete(e) {
+      e.stopPropagation();
+      const btn = e.currentTarget;
+      if (confirm('Bạn có chắc muốn xóa bình luận này?')) {
+        deleteComment(btn.dataset.id, btn);
+      }
+    }
+
+    function attachDeleteEvents() {
+      document.querySelectorAll('.delete-comment').forEach(btn => {
+        btn.removeEventListener('click', handleDelete);
+        btn.addEventListener('click', handleDelete);
+      });
+    }
+    attachDeleteEvents();
+
+    document.querySelectorAll('.like-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const postId = btn.dataset.id;
+        try {
+          const res = await fetch(`/posts/${postId}/like`, { method: 'POST' });
+          const data = await res.json();
+          const likeIcon = btn.querySelector('i');
+          const likeCount = btn.querySelector('.like-count');
+          likeCount.innerText = data.likeCount;
+          if (data.liked) {
+            likeIcon.className = 'fas fa-heart';
+            showToast('Đã thích bài viết', 'success');
+          } else {
+            likeIcon.className = 'far fa-heart';
+            showToast('Đã bỏ thích', 'info');
+          }
+          const dislikeBtn = document.querySelector('.dislike-btn');
+          if (dislikeBtn && data.dislikeCount !== undefined) {
+            dislikeBtn.querySelector('.dislike-count').innerText = data.dislikeCount;
+            dislikeBtn.querySelector('i').className = 'far fa-thumbs-down';
+          }
+        } catch (err) {
+          showToast('Lỗi kết nối', 'danger');
+        }
+      });
+    });
+
+    document.querySelectorAll('.dislike-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const postId = btn.dataset.id;
+        try {
+          const res = await fetch(`/posts/${postId}/dislike`, { method: 'POST' });
+          const data = await res.json();
+          const dislikeIcon = btn.querySelector('i');
+          const dislikeCount = btn.querySelector('.dislike-count');
+          dislikeCount.innerText = data.dislikeCount;
+          if (data.disliked) {
+            dislikeIcon.className = 'fas fa-thumbs-down';
+            showToast('Đã không thích', 'info');
+          } else {
+            dislikeIcon.className = 'far fa-thumbs-down';
+            showToast('Đã bỏ không thích', 'info');
+          }
+          const likeBtn = document.querySelector('.like-btn');
+          if (likeBtn && data.likeCount !== undefined) {
+            likeBtn.querySelector('.like-count').innerText = data.likeCount;
+            likeBtn.querySelector('i').className = 'far fa-heart';
+          }
+        } catch (err) {
+          showToast('Lỗi kết nối', 'danger');
+        }
+      });
+    });
+
+    document.querySelectorAll('.save-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const postId = btn.dataset.id;
+        try {
+          const res = await fetch(`/posts/${postId}/save`, { method: 'POST' });
+          const data = await res.json();
+          if (data.saved) {
+            btn.querySelector('i').className = 'fas fa-bookmark';
+            showToast('Đã lưu bài viết', 'success');
+          } else {
+            btn.querySelector('i').className = 'far fa-bookmark';
+            showToast('Đã bỏ lưu', 'info');
+          }
+        } catch (err) {
+          showToast('Lỗi kết nối', 'danger');
+        }
+      });
+    });
+
+    document.querySelectorAll('.share-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const url = `${window.location.origin}/posts/${btn.dataset.id}`;
+        navigator.clipboard.writeText(url);
+        showToast('Đã sao chép liên kết!', 'success');
+      });
+    });
+
+    const submitReportBtn = document.getElementById('submitReport');
+    if (submitReportBtn) {
+      submitReportBtn.addEventListener('click', async () => {
+        const postId = document.querySelector('.report-btn')?.dataset.id;
+        const reason = document.getElementById('reportReason').value.trim();
+        if (!reason) {
+          showToast('Vui lòng nhập lý do', 'danger');
+          return;
+        }
+        try {
+          const res = await fetch(`/posts/${postId}/report`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ reason })
+          });
+          if (res.ok) {
+            showToast('Cảm ơn bạn đã báo cáo!', 'success');
+            bootstrap.Modal.getInstance(document.getElementById('reportModal')).hide();
+            document.getElementById('reportReason').value = '';
+          } else {
+            const err = await res.json();
+            showToast(err.error || 'Lỗi gửi báo cáo', 'danger');
+          }
+        } catch (err) {
+          showToast('Lỗi kết nối', 'danger');
+        }
+      });
+    }
+  </script>
+</body>
+</html>

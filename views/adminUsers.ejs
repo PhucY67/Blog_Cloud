@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <% const title = 'Quản lý tài khoản - BlogCloud'; %>
+    <%- include('partials/head', { title: title }) %>
+</head>
+<body>
+    <%- include('partials/header') %>
+    <script src="/js/sidebar.js"></script>
+    
+    <main class="container my-4" style="margin-top: 80px !important;">
+    <div class="row justify-content-end">
+      <div class="col-12 col-md-10 col-lg-9 col-xl-10">
+        
+        <!-- Nút tạo user mới -->
+        <div class="mb-3">
+          <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createUserModal">
+            <i class="fas fa-plus-circle"></i> Tạo tài khoản mới
+          </button>
+          <a href="/admin/hidden" class="btn btn-dark ms-2"><i class="fas fa-eye-slash"></i> Bài viết đã ẩn</a>
+          <a href="/admin" class="btn btn-outline-danger ms-2"><i class="fas fa-flag"></i> Bài viết bị báo cáo</a>
+        </div>
+        
+        <!-- Danh sách user -->
+        <div class="card shadow-sm border-0 rounded-4">
+          <div class="card-header bg-info text-white fw-bold">
+            <i class="fas fa-users me-2"></i>Quản lý tài khoản
+          </div>
+          <div class="card-body">
+            <% if (users && users.length > 0) { %>
+            <div class="table-responsive">
+              <table class="table table-hover align-middle">
+                <thead>
+                  <tr>
+                    <th>Avatar</th>
+                    <th>Username</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Ngày tạo</th>
+                    <th>Hành động</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% users.forEach(u => { %>
+                    <tr>
+                      <td>
+                        <img src="<%= u.avatar || '/uploads/default-avatar.png' %>" 
+                             style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover;">
+                      </td>
+                      <td><%= u.username %></td>
+                      <td><%= u.email %></td>
+                      <td>
+                        <span class="badge bg-<%= u.role === 'admin' ? 'danger' : 'primary' %>">
+                          <%= u.role === 'admin' ? 'Admin' : 'User' %>
+                        </span>
+                      </td>
+                      <td><%= new Date(u.createdAt).toLocaleDateString('vi-VN') %></td>
+                      <td>
+                        <button class="btn btn-sm btn-outline-primary" 
+                                onclick="editUser('<%= u._id %>', '<%= u.username %>', '<%= u.email %>', '<%= u.role %>')">
+                          <i class="fas fa-edit"></i>
+                        </button>
+                        <% if (u._id.toString() !== user.userId.toString()) { %>
+                          <form action="/admin/users/delete/<%= u._id %>" method="POST" class="d-inline" 
+                                onsubmit="return confirm('Xóa tài khoản <%= u.username %> vĩnh viễn?')">
+                            <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></button>
+                          </form>
+                        <% } %>
+                      </td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+            <% } else { %>
+              <p class="text-muted text-center">Không có tài khoản nào.</p>
+            <% } %>
+          </div>
+        </div>
+        
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal tạo user -->
+  <div class="modal fade" id="createUserModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form action="/admin/users/create" method="POST">
+          <div class="modal-header">
+            <h5 class="modal-title">Tạo tài khoản mới</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">Username</label>
+              <input type="text" name="username" class="form-control" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Email</label>
+              <input type="email" name="email" class="form-control" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Mật khẩu</label>
+              <input type="password" name="password" class="form-control" required minlength="6">
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Quyền</label>
+              <select name="role" class="form-select">
+                <option value="user">User</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+            <button type="submit" class="btn btn-success">Tạo</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal sửa user -->
+  <div class="modal fade" id="editUserModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <form id="editUserForm" method="POST">
+          <div class="modal-header">
+            <h5 class="modal-title">Chỉnh sửa tài khoản</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label">Username</label>
+              <input type="text" name="username" id="editUsername" class="form-control" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Email</label>
+              <input type="email" name="email" id="editEmail" class="form-control" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Quyền</label>
+              <select name="role" id="editRole" class="form-select">
+                <option value="user">User</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+            <button type="submit" class="btn btn-primary">Lưu</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <%- include('partials/footer') %>
+  
+  <script src="/js/common.js"></script>
+  <script>
+    function editUser(id, username, email, role) {
+      document.getElementById('editUserForm').action = '/admin/users/edit/' + id;
+      document.getElementById('editUsername').value = username;
+      document.getElementById('editEmail').value = email;
+      document.getElementById('editRole').value = role;
+      new bootstrap.Modal(document.getElementById('editUserModal')).show();
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+<% const title = 'Thông báo - BlogCloud'; %>
+<%- include('partials/head', { title: title }) %>
+</head>
+<body>
+  <%- include('partials/header') %>
+<script src="/js/sidebar.js"></script>
+<main class="container my-4" style="margin-top: 80px !important;">
+  <div class="row justify-content-end">
+    <div class="col-12 col-md-10 col-lg-9 col-xl-10">
+      <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-header bg-info text-white fw-bold d-flex justify-content-between align-items-center">
+          <span><i class="fas fa-bell me-2"></i>Thông báo của bạn</span>
+          <button id="markAllReadBtn" class="btn btn-sm btn-light">
+            <i class="fas fa-check-double me-1"></i>Đánh dấu tất cả đã đọc
+          </button>
+        </div>
+        <div class="card-body p-0">
+          <ul class="list-group list-group-flush" id="notificationsList">
+            <% if (notifications && notifications.length > 0) { %>
+              <% notifications.forEach(notif => { %>
+                <li class="list-group-item d-flex justify-content-between align-items-center <%= notif.read ? 'bg-light' : 'bg-white' %>" data-id="<%= notif._id %>">
+                  <div>
+                    <strong><%= notif.sender ? notif.sender.username : 'Hệ thống' %></strong> <%= notif.message %>
+                    <% if (notif.post) { %>
+                      <a href="/posts/<%= notif.post %>" class="text-decoration-none ms-2">Xem bài</a>
+                    <% } %>
+                    <div class="small text-muted"><%= new Date(notif.createdAt).toLocaleString('vi-VN') %></div>
+                  </div>
+                  <% if (!notif.read) { %>
+                    <button class="btn btn-sm btn-outline-secondary mark-read" data-id="<%= notif._id %>">✓ Đã đọc</button>
+                  <% } else { %>
+                    <span class="badge bg-secondary">Đã đọc</span>
+                  <% } %>
+                </li>
+              <% }) %>
+            <% } else { %>
+              <li class="list-group-item text-muted" id="emptyNotification">
+                <i class="fas fa-inbox me-2"></i>Không có thông báo nào.
+              </li>
+            <% } %>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+
+  <%- include('partials/footer') %>
+  
+  <script src="/js/common.js"></script>
+  <script>
+    async function markAsRead(notificationId, btnElement) {
+      try {
+        const res = await fetch(`/users/api/notifications/${notificationId}/read`, { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          const li = btnElement.closest('.list-group-item');
+          li.classList.add('bg-light');
+          
+          const badge = document.createElement('span');
+          badge.className = 'badge bg-secondary';
+          badge.innerText = 'Đã đọc';
+          btnElement.replaceWith(badge);
+          
+          showToast('Đã đánh dấu đọc', 'success');
+          updateNotificationBadge();
+        } else {
+          showToast(data.error || 'Lỗi đánh dấu', 'danger');
+        }
+      } catch (err) {
+        showToast('Lỗi kết nối', 'danger');
+      }
+    }
+
+    async function markAllAsRead() {
+      const btn = document.getElementById('markAllReadBtn');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Đang xử lý...';
+      
+      try {
+        const res = await fetch('/users/api/notifications/mark-all-read', { method: 'POST' });
+        const data = await res.json();
+        
+        if (data.success) {
+          const unreadBtns = document.querySelectorAll('.mark-read');
+          unreadBtns.forEach(btn => {
+            const li = btn.closest('.list-group-item');
+            li.classList.add('bg-light');
+            
+            const badge = document.createElement('span');
+            badge.className = 'badge bg-secondary';
+            badge.innerText = 'Đã đọc';
+            btn.replaceWith(badge);
+          });
+          showToast(`Đã đánh dấu ${data.count || unreadBtns.length} thông báo là đã đọc`, 'success');
+          updateNotificationBadge();
+        } else {
+          showToast(data.error || 'Lỗi khi đánh dấu tất cả', 'danger');
+        }
+      } catch (err) {
+        showToast('Lỗi kết nối server', 'danger');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-check-double me-1"></i>Đánh dấu tất cả đã đọc';
+      }
+    }
+
+    document.querySelectorAll('.mark-read').forEach(btn => {
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        markAsRead(this.dataset.id, this);
+      });
+    });
+
+    const markAllBtn = document.getElementById('markAllReadBtn');
+    if (markAllBtn) {
+      markAllBtn.addEventListener('click', markAllAsRead);
+    }
+  </script>
+</body>
+</html>

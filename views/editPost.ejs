@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <% const title='Chỉnh sửa bài viết - BlogCloud' ; %>
+    <%- include('partials/head', { title: title }) %>
+      <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+      <style>
+        .tag-btn {
+          transition: all 0.2s;
+        }
+
+        .tag-btn:hover {
+          transform: scale(1.05);
+        }
+      </style>
+</head>
+
+<body>
+  <%- include('partials/header') %>
+    <script src="/js/sidebar.js"></script>
+
+    <main class="container my-4" style="margin-top: 80px !important;">
+      <div class="row justify-content-end">
+        <div class="col-12 col-md-10 col-lg-9 col-xl-10">
+          <div class="card shadow-sm border-0 rounded-4">
+            <div class="card-header bg-white fw-bold fs-5">
+              <i class="fas fa-edit me-2"></i>Chỉnh sửa bài viết
+            </div>
+            <div class="card-body">
+              <form id="editPostForm" action="/posts/<%= post._id %>/update" method="POST">
+                <div class="mb-3">
+                  <label class="form-label fw-semibold">Tiêu đề</label>
+                  <input type="text" name="title" id="title" class="form-control" value="<%= escapedTitle %>" required>
+                </div>
+                <div class="mb-3">
+                  <label class="form-label fw-semibold">Tags</label>
+                  <div id="tagsContainer" class="d-flex flex-wrap gap-2 mb-2">
+                    <span class="text-muted">Đang tải tags...</span>
+                  </div>
+                  <input type="hidden" name="tags" id="tagsInput" value="">
+                </div>
+                <div class="mb-3">
+                  <label class="form-label fw-semibold">Nội dung</label>
+                  <div id="editor" style="height: 400px;"></div>
+                  <textarea name="content" id="content" style="display:none;"></textarea>
+                  <div class="d-flex justify-content-between align-items-center mt-2">
+                    <div class="form-text">
+                      <i class="fas fa-info-circle"></i> Mẹo:
+                      <strong>Nhấn biểu tượng ảnh</strong> để upload ảnh,
+                      hoặc <strong>dán ảnh (Ctrl+V)</strong> trực tiếp.
+                    </div>
+                    <button type="button" class="btn btn-outline-primary btn-sm" id="uploadFileBtn">
+                      <i class="fas fa-paperclip"></i> Đính kèm file
+                    </button>
+                  </div>
+                </div>
+                <div class="d-flex justify-content-end gap-2">
+                  <a href="/posts/<%= post._id %>" class="btn btn-secondary">Hủy</a>
+                  <button type="submit" class="btn btn-primary">Cập nhật</button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <%- include('partials/footer') %>
+
+      <div class="image-upload-progress" id="uploadProgress" style="display:none;">
+        <i class="fas fa-spinner fa-spin me-2"></i>Đang upload...
+      </div>
+
+      <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+      <script src="/js/common.js"></script>
+      <script>
+        const toolbarOptions = [
+          [{ 'header': [1, 2, 3, false] }],
+          ['bold', 'italic', 'underline', 'strike'],
+          [{ 'color': [] }, { 'background': [] }],
+          [{ 'font': [] }],
+          [{ 'size': ['small', false, 'large', 'huge'] }],
+          ['blockquote', 'code-block'],
+          [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+          [{ 'align': [] }],
+          ['link', 'image', 'video'],
+          ['clean']
+        ];
+
+        const oldContent = `<%- escapedContent %>`;
+        const quill = initQuillEditor('Chỉnh sửa nội dung bài viết...', toolbarOptions, oldContent);
+
+        document.getElementById('uploadFileBtn').addEventListener('click', () => {
+          const input = document.createElement('input');
+          input.setAttribute('type', 'file');
+          input.setAttribute('accept', '.docx,.doc,.ppt,.pptx,.txt,.xlsx,.xls,.pdf');
+          input.click();
+          input.onchange = async () => {
+            if (input.files[0]) await uploadFile(input.files[0], quill);
+          };
+        });
+
+        const form = document.getElementById('editPostForm');
+        form.addEventListener('submit', function (e) {
+          const contentField = document.getElementById('content');
+          contentField.value = quill.root.innerHTML;
+
+          if (!contentField.value.trim()) {
+            e.preventDefault();
+            alert('Nội dung không được để trống');
+            return;
+          }
+          if (!document.getElementById('title').value.trim()) {
+            e.preventDefault();
+            alert('Tiêu đề không được để trống');
+            return;
+          }
+        });
+
+      let selectedTags = <%- JSON.stringify(post.tags || []) %>;
+          async function loadTags() {
+            try {
+              const res = await fetch('/admin/api/tags');
+              const data = await res.json();
+              if (data.success) {
+                renderTags(data.tags);
+                document.getElementById('tagsInput').value = selectedTags.join(', ');
+              }
+            } catch (err) {
+              document.getElementById('tagsContainer').innerHTML = '<span class="text-danger">Lỗi tải tags</span>';
+            }
+          }
+
+        function renderTags(tags) {
+          const container = document.getElementById('tagsContainer');
+          container.innerHTML = '';
+
+          if (tags.length === 0) {
+            container.innerHTML = '<span class="text-muted">Chưa có tags nào</span>';
+            return;
+          }
+
+          tags.forEach(tag => {
+            const isSelected = selectedTags.includes(tag);
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = `btn btn-sm ${isSelected ? 'btn-primary' : 'btn-outline-primary'} tag-btn`;
+            btn.textContent = tag;
+            btn.dataset.tag = tag;
+            btn.addEventListener('click', () => toggleTag(tag, btn));
+            container.appendChild(btn);
+          });
+        }
+
+        function toggleTag(tag, btn) {
+          if (selectedTags.includes(tag)) {
+            selectedTags = selectedTags.filter(t => t !== tag);
+            btn.className = 'btn btn-sm btn-outline-primary tag-btn';
+          } else {
+            selectedTags.push(tag);
+            btn.className = 'btn btn-sm btn-primary tag-btn';
+          }
+          document.getElementById('tagsInput').value = selectedTags.join(', ');
+        }
+
+        loadTags();
+      </script>
+</body>
+
+</html>

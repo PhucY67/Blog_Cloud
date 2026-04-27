@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<% const title = 'BlogCloud'; %>
+<%- include('partials/head', { title: title }) %>
+</head>
+<body>
+   <%- include('partials/header') %>
+    <main class="container my-4" style="margin-top: 80px !important;">
+        <%- body %>
+    </main>
+    <%- include('partials/footer') %>
+    
+    <script src="/js/common.js"></script>
+    <script>
+        const darkCSS = document.getElementById('theme-css');
+        const toggleBtn = document.getElementById('themeToggle');
+        if(toggleBtn) toggleBtn.onclick = () => {
+            let isDark = darkCSS.disabled;
+            darkCSS.disabled = !isDark;
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        };
+        if(localStorage.getItem('theme') === 'dark') darkCSS.disabled = false;
+    </script>
+</body>
+</html>
