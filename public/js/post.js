@@ -168,7 +168,6 @@ document.getElementById('commentForm')?.addEventListener('submit', async (e) => 
   }
 });
 
-// ========== DELETE COMMENT ==========
 document.getElementById('commentsList')?.addEventListener('click', async (e) => {
   const deleteBtn = e.target.closest('.delete-comment');
   if (!deleteBtn) return;

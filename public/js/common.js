@@ -182,7 +182,7 @@ function escapeHtml(str) {
   });
 }
 
-// Khởi tạo khi DOM load - CHỈ 1 LẦN
+// Khởi tạo khi DOM load
 document.addEventListener('DOMContentLoaded', () => {
   initTheme();
   updateNotificationBadge();
