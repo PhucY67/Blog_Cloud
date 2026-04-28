@@ -12,13 +12,8 @@
     <main class="container my-4" style="margin-top: 80px !important;">
       <div class="row justify-content-end">
         <div class="col-12 col-md-10 col-lg-9 col-xl-10">
-          <div class="search-wrapper mb-4">
-            <input type="text" id="searchInput" class="form-control form-control-lg"
-              placeholder="Tìm kiếm bài viết...">
             <script async src="https://cse.google.com/cse.js?cx=500fdfae369e44ff2">
             </script>
-            <div class="gcse-search"></div>
-          </div>
           <% if (allTags && allTags.length> 0) { %>
             <div class="mb-4">
               <a href="/posts" class="btn btn-sm <%= !tag ? 'btn-primary' : 'btn-outline-primary' %> me-1 mb-1">Tất
@@ -110,24 +105,6 @@
     <%- include('partials/footer') %>
 
       <script src="/js/common.js"></script>
-      <script>
-        const searchInput = document.getElementById('searchInput');
-        if (searchInput) {
-          searchInput.addEventListener('input', function (e) {
-            const keyword = e.target.value.toLowerCase().trim();
-            const postCards = document.querySelectorAll('#postsContainer .post-card');
-
-            postCards.forEach(card => {
-              const titleLink = card.querySelector('.card-title a');
-              if (titleLink) {
-                const title = titleLink.innerText.toLowerCase();
-                card.style.display = title.includes(keyword) ? '' : 'none';
-              }
-            });
-          });
-        }
-
-      </script>
 </body>
 
 </html>
