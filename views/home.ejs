@@ -1,112 +1,106 @@
 <!DOCTYPE html>
 <html lang="vi">
-
 <head>
-  <% const title='Trang chủ - BlogCloud' ; %>
-    <%- include('partials/head', { title: title }) %>
+<% const title = 'Trang chủ - BlogCloud'; %>
+<%- include('partials/head', { title: title }) %>
 </head>
-
 <body>
   <%- include('partials/header') %>
 
-    <main class="container my-4" style="margin-top: 80px !important;">
-      <div class="row justify-content-end">
-        <div class="col-12 col-md-10 col-lg-9 col-xl-10">
-          <div class="search-wrapper mb-4">
-            <script async src="https://cse.google.com/cse.js?cx=500fdfae369e44ff2"></script>
-            <div class="gcse-search"></div>
-          </div>
-          <% if (allTags && allTags.length> 0) { %>
-            <div class="mb-4">
-              <a href="/posts" class="btn btn-sm <%= !tag ? 'btn-primary' : 'btn-outline-primary' %> me-1 mb-1">Tất
-                cả</a>
-              <% allTags.forEach(t=> { %>
-                <a href="/posts?tag=<%= t %>"
-                  class="btn btn-sm <%= tag === t ? 'btn-primary' : 'btn-outline-primary' %> me-1 mb-1">
-                  <%= t %>
-                </a>
-                <% }) %>
-            </div>
-            <% } %>
-              <div id="postsContainer">
-                <% if (posts && posts.length> 0) { %>
-                  <% posts.forEach(post=> { %>
-                    <div class="card mb-4 shadow-sm border-0 rounded-4 post-card">
-                      <div class="card-body p-4">
-                        <h5 class="card-title fs-4">
-                          <a href="/posts/<%= post._id %>" class="text-dark text-decoration-none fw-semibold">
-                            <%= post.title %>
-                          </a>
-                        </h5>
-                        <!-- Tags -->
-                        <% if (post.tags && post.tags.length> 0) { %>
-                          <div class="mb-2">
-                            <% post.tags.forEach(t=> { %>
-                              <a href="/posts?tag=<%= t %>" class="badge bg-secondary text-decoration-none me-1">
-                                <%= t %>
-                              </a>
-                              <% }) %>
-                          </div>
-                          <% } %>
-                            <div class="text-muted small mb-2">
-                              <a href="/users/profile/<%= post.author._id %>" class="text-decoration-none">
-                                <i class="fas fa-user-circle"></i>
-                                <%= post.author.displayName || post.author.username %>
-                              </a>
-                              <i class="far fa-calendar-alt ms-2"></i>
-                              <%= new Date(post.createdAt).toLocaleDateString('vi-VN') %>
-                            </div>
-                            <p class="card-text mt-2">
-                              <%= post.content ? post.content.replace(/<[^>]*>/g, '').substring(0, 200) : '' %>...
-                            </p>
-                            <div class="d-flex gap-4 mt-3">
-                              <span class="text-muted small"><i class="far fa-heart"></i>
-                                <%= post.likes ? post.likes.length : 0 %>
-                              </span>
-                              <span class="text-muted small"><i class="far fa-comment"></i>
-                                <%= post.comments ? post.comments.length : 0 %>
-                              </span>
-                            </div>
-                      </div>
-                    </div>
-                    <% }) %>
-                      <% if (totalPages> 1) { %>
-                        <nav>
-                          <ul class="pagination justify-content-center">
-                            <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
-                              <a class="page-link"
-                                href="/posts?page=<%= currentPage - 1 %><%= tag ? '&tag=' + tag : '' %>">« Trước</a>
-                            </li>
-                            <% for (let i=1; i <=totalPages; i++) { %>
-                              <li class="page-item <%= currentPage === i ? 'active' : '' %>">
-                                <a class="page-link" href="/posts?page=<%= i %><%= tag ? '&tag=' + tag : '' %>">
-                                  <%= i %>
-                                </a>
-                              </li>
-                              <% } %>
-                                <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
-                                  <a class="page-link"
-                                    href="/posts?page=<%= currentPage + 1 %><%= tag ? '&tag=' + tag : '' %>">Sau »</a>
-                                </li>
-                          </ul>
-                        </nav>
-                        <% } %>
-
-                          <% } else { %>
-                            <div class="alert alert-info text-center">
-                              <i class="fas fa-inbox me-2"></i>Chưa có bài viết nào.
-                              <a href="/posts/create" class="alert-link">Viết bài đầu tiên!</a>
-                            </div>
-                            <% } %>
-              </div>
-
-        </div>
+  <main class="container my-4" style="margin-top: 80px !important;">
+  <div class="row justify-content-end">
+    <div class="col-12 col-md-10 col-lg-9 col-xl-10">
+      <div class="search-wrapper mb-4">
+        <input type="text" id="searchInput" class="form-control form-control-lg" placeholder="Tìm kiếm bài viết...">
       </div>
-    </main>
+      <% if (allTags && allTags.length > 0) { %>
+      <div class="mb-4">
+        <a href="/posts" class="btn btn-sm <%= !tag ? 'btn-primary' : 'btn-outline-primary' %> me-1 mb-1">Tất cả</a>
+        <% allTags.forEach(t => { %>
+          <a href="/posts?tag=<%= t %>" class="btn btn-sm <%= tag === t ? 'btn-primary' : 'btn-outline-primary' %> me-1 mb-1"><%= t %></a>
+        <% }) %>
+      </div>
+      <% } %>
+      <div id="postsContainer">
+        <% if (posts && posts.length > 0) { %>
+          <% posts.forEach(post => { %>
+            <div class="card mb-4 shadow-sm border-0 rounded-4 post-card">
+              <div class="card-body p-4">
+                <h5 class="card-title fs-4">
+                  <a href="/posts/<%= post._id %>" class="text-dark text-decoration-none fw-semibold"><%= post.title %></a>
+                </h5>
+                <!-- Tags -->
+                <% if (post.tags && post.tags.length > 0) { %>
+                  <div class="mb-2">
+                    <% post.tags.forEach(t => { %>
+                      <a href="/posts?tag=<%= t %>" class="badge bg-secondary text-decoration-none me-1"><%= t %></a>
+                    <% }) %>
+                  </div>
+                <% } %>
+                <div class="text-muted small mb-2">
+                  <a href="/users/profile/<%= post.author._id %>" class="text-decoration-none">
+                    <i class="fas fa-user-circle"></i> <%= post.author.displayName || post.author.username %>
+                  </a>
+                  <i class="far fa-calendar-alt ms-2"></i> <%= new Date(post.createdAt).toLocaleDateString('vi-VN') %>
+                </div>
+                <p class="card-text mt-2"><%= post.content ? post.content.replace(/<[^>]*>/g, '').substring(0, 200) : '' %>...</p>
+                <div class="d-flex gap-4 mt-3">
+                  <span class="text-muted small"><i class="far fa-heart"></i> <%= post.likes ? post.likes.length : 0 %></span>
+                  <span class="text-muted small"><i class="far fa-comment"></i> <%= post.comments ? post.comments.length : 0 %></span>
+                </div>
+              </div>
+            </div>
+          <% }) %>
+          <% if (totalPages > 1) { %>
+          <nav>
+            <ul class="pagination justify-content-center">
+              <li class="page-item <%= currentPage === 1 ? 'disabled' : '' %>">
+                <a class="page-link" href="/posts?page=<%= currentPage - 1 %><%= tag ? '&tag=' + tag : '' %>">« Trước</a>
+              </li>
+              <% for (let i = 1; i <= totalPages; i++) { %>
+                <li class="page-item <%= currentPage === i ? 'active' : '' %>">
+                  <a class="page-link" href="/posts?page=<%= i %><%= tag ? '&tag=' + tag : '' %>"><%= i %></a>
+                </li>
+              <% } %>
+              <li class="page-item <%= currentPage === totalPages ? 'disabled' : '' %>">
+                <a class="page-link" href="/posts?page=<%= currentPage + 1 %><%= tag ? '&tag=' + tag : '' %>">Sau »</a>
+              </li>
+            </ul>
+          </nav>
+          <% } %>
+          
+        <% } else { %>
+          <div class="alert alert-info text-center">
+            <i class="fas fa-inbox me-2"></i>Chưa có bài viết nào. 
+            <a href="/posts/create" class="alert-link">Viết bài đầu tiên!</a>
+          </div>
+        <% } %>
+      </div>
+      
+    </div>
+  </div>
+</main>
 
-    <%- include('partials/footer') %>
-
-      <script src="/js/common.js"></script>
+  <%- include('partials/footer') %>
+  
+  <script src="/js/common.js"></script>
+  <script>
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+      searchInput.addEventListener('input', function (e) {
+        const keyword = e.target.value.toLowerCase().trim();
+        const postCards = document.querySelectorAll('#postsContainer .post-card');
+        
+        postCards.forEach(card => {
+          const titleLink = card.querySelector('.card-title a');
+          if (titleLink) {
+            const title = titleLink.innerText.toLowerCase();
+            card.style.display = title.includes(keyword) ? '' : 'none';
+          }
+        });
+      });
+    }
+    
+  </script>
 </body>
-
 </html>
